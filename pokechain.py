@@ -4,10 +4,10 @@ import copy
 import threading
 import time
 
-MINUTES = 840
+MINUTES = 5
 
 pokedex = json.load(open('pokedex.json'))
-longest_chain = json.load(open('chain.json'))
+longest_chain = json.load(open('pokechain.json'))
 old_longest = len(longest_chain)
 
 nodes = {}
@@ -63,21 +63,37 @@ class ChainThread(threading.Thread):
 
     return current_longest
 
-for i in range(MINUTES):
+def parse_chain(chain):
+  pokechain = []
+  pokedexcopy = copy.deepcopy(pokedex)
+  for pair in chain:
+    match = None
+    try:
+      match = next(x for x in pokedexcopy if x[0] + x[-1] == pair)
+    except:
+      return "There's an invalid pokemon in your chain!"
+    
+    pokedexcopy.remove(match)
+    pokechain.append(match)
+  
+  return pokechain
+
+for i in range(MINUTES * 10):
   result = []
   stop_please = False
   thread = ChainThread(nodes)
 
   thread.start()
-  time.sleep(60)
+  time.sleep(6)
   stop_please = True
   thread.join()
-  print(str(i + 1) + "/" + str(MINUTES))
+  if i % 10 == 0:
+    print(str(int(i/10)+1) + "/" + str(MINUTES))
 
   if (len(result) > len(longest_chain)):
     longest_chain = result
-    with open('chain_file.json', 'w') as outfile:
-      json.dump(longest_chain, outfile)
+    with open('pokechain.json', 'w') as outfile:
+      json.dump(parse_chain(longest_chain), outfile)
     print("New longest chain found! Length: ", len(longest_chain))
 
 if len(longest_chain) > old_longest:
