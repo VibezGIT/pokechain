@@ -16,7 +16,7 @@ impl fmt::Debug for Node {
 }
 
 fn main() {
-    let file = fs::read_to_string("../pokedex.json").expect("Unable to read file");
+    let file = fs::read_to_string("./array_for_rust.json").expect("Unable to read file");
     let json: serde_json::Value = serde_json::from_str(&file).expect("JSON was not properly formatted.");
     let length = json.as_array().unwrap().len();
     let mut pokechain: Vec<String> = Vec::new();
@@ -34,7 +34,7 @@ fn main() {
     fs::write("./pokechain.json", result.unwrap()).expect("Unable to write file.");
 }
 fn start(index: usize) -> Vec<String> {
-    let file = fs::read_to_string("../pokedex.json").expect("Unable to read file");
+    let file = fs::read_to_string("./array_for_rust.json").expect("Unable to read file");
     let json: serde_json::Value = serde_json::from_str(&file).expect("JSON was not properly formatted.");
     let pokedex: Vec<String> = json.clone().to_owned().as_array_mut().unwrap().iter()
         .map(|x|x.as_str().unwrap().to_owned()).collect();
@@ -64,7 +64,7 @@ fn start(index: usize) -> Vec<String> {
 }
 
 fn dfs(start_index: usize, graph: Vec<Node>) -> Vec<usize> {
-    let mut longest_path: Vec<usize> = Vec::new();
+    let mut longest_path: Vec<usize>;
     let mut current_path: Vec<usize> = Vec::new();
     let mut up_next: Vec<usize> = Vec::new();
     let mut visited: [bool; 1000] = [false; 1000];
@@ -84,6 +84,7 @@ fn dfs(start_index: usize, graph: Vec<Node>) -> Vec<usize> {
             visited[current_index] = true;
 
             if current_path.len() > longest_path.len() {
+                println!("{}", current_path.len());
                 longest_path = current_path.clone();
             }
 
@@ -98,6 +99,7 @@ fn dfs(start_index: usize, graph: Vec<Node>) -> Vec<usize> {
         } else {
             current_path.pop();
             up_next.pop();
+            visited[current_index] = false;
         }
     }
 
