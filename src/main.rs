@@ -16,7 +16,7 @@ fn create_graph(pokedex: &Vec<String>) -> HashMap<char, HashMap<char, usize>> {
       _ => ()
     }
 
-    let mut edges = graph.get_mut(&start).unwrap();
+    let edges = graph.get_mut(&start).unwrap();
     match edges.get_mut(&end) {
       None => {
         edges.insert(end, 1);
@@ -59,4 +59,5 @@ fn main() {
   let remainder = create_remainder(&pokedex[0..pokedex_length].to_vec());
 
   println!("{:?}", graph);
+  println!("{:?}", remainder);
 }
