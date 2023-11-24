@@ -1,22 +1,15 @@
 use std::fs;
-use std::collections::HashMap;
 use std::time::Instant;
 
-struct Node {
-    pokemon: String,
-    edges: Vec<usize>
-}
-
+const POKEDEX_LENGTH: usize = 70; // MAX 898
 
 fn main() {
-    let pokedex_length = 70; //MAX 898
-
     let file = fs::read_to_string("./pokedex.json").expect("Unable to read file");
     let pokedex: Vec<String> = serde_json::from_str(&file).expect("JSON was not properly formatted.");  
-    let graph = create_graph(&pokedex[0..pokedex_length].to_vec());
+    let graph = create_graph(&pokedex[0..POKEDEX_LENGTH].to_vec());
 
     let start = Instant::now();
-    let pokechain = find_longest_pokechain(&graph);
+    let pokechain = find_longest_pokechain(&graph, pokedex);
     let duration = start.elapsed().as_millis();
 
     println!("Pokechain: {:?}", pokechain);
@@ -26,62 +19,48 @@ fn main() {
 }
 
 
-fn create_graph(pokedex: &Vec<String>) -> Vec<Node> {
-    let mut graph: Vec<Node> = Vec::new();
-    let pokedex =  pokedex.clone();
+fn create_graph(pokedex: &Vec<String>) -> [[u32; POKEDEX_LENGTH]; POKEDEX_LENGTH] {
+    let mut graph: [[u32; POKEDEX_LENGTH]; POKEDEX_LENGTH] = [[0; POKEDEX_LENGTH]; POKEDEX_LENGTH];
 
     for i in 0..pokedex.len() {
-        let pokemon = pokedex[i].clone();
-        let mut edges: Vec<usize> = Vec::new();
-
         for j in 0..pokedex.len() {
-            if pokedex[i].chars().last() == pokedex[j].chars().next() {
-                edges.push(j);
+            if pokedex[i].chars().last() == pokedex[j].chars().next() && i != j {
+                graph[i][j] = 1;
             }
         }
-
-        graph.push(Node{pokemon, edges});
     }
-
     return graph;
 }
 
-fn dft(node: &Node, graph: &Vec<Node>, visited: &HashMap<usize, bool>) -> Vec<String> {
-    let mut longest_neighbor: Vec<String> = Vec::new();
-    let edges_copy = node.edges.clone();
+fn dft(node: usize, graph: &[[u32; POKEDEX_LENGTH]; POKEDEX_LENGTH], visited: &[u32; POKEDEX_LENGTH]) -> Vec<usize> {
+    let mut longest_neighbor: Vec<usize> = Vec::new();
+    let mut new_visited = visited.clone();
+    new_visited[node] = 1;
 
-    for i in 0..edges_copy.len() {
-        let mut new_visited = visited.clone();
-        match new_visited.insert(edges_copy[i], true) {
-            None => {
-                let neighbor_chain = dft(&graph[edges_copy[i]], graph, &new_visited);
-        
-                if neighbor_chain.len() > longest_neighbor.len() {
-                    longest_neighbor = neighbor_chain.clone();
-                }
+    for i in 0..graph[node].len() {
+        if graph[node][i] == 1 && visited[i] == 0 {
+            let neighbor_chain = dft(i, &graph, &new_visited);
+            if neighbor_chain.len() > longest_neighbor.len() {
+                longest_neighbor = neighbor_chain.clone();
             }
-            Some(_) => { continue }
         }
     }
 
-    let mut longest_chain = vec![node.pokemon.clone()];
+    let mut longest_chain = vec![node];
     longest_chain.append(&mut longest_neighbor);
 
     return longest_chain;
 }
 
-fn find_longest_pokechain(graph: &Vec<Node>) -> Vec<String> {
-    let mut longest_chain: Vec<String> = Vec::new();
+fn find_longest_pokechain(graph: &[[u32; POKEDEX_LENGTH]; POKEDEX_LENGTH], pokedex: Vec<String>) -> Vec<String> {
+    let mut longest_index_chain: Vec<usize> = Vec::new();
     for i in 0..graph.len() {
-        let mut visited = HashMap::new();
-        visited.insert(i, true);
-        let current_chain = dft(&graph[i], graph, &visited);
+        let current_index_chain = dft(i, &graph, &[0; POKEDEX_LENGTH]);
 
-        if current_chain.len() > longest_chain.len() {
-            longest_chain = current_chain.clone();
+        if current_index_chain.len() > longest_index_chain.len() {
+            longest_index_chain = current_index_chain.clone();
         }
     }
-
-    return longest_chain;
+    
+    return longest_index_chain.to_vec().iter().map(|x| { pokedex[*x].clone() }).collect();
 }
-
