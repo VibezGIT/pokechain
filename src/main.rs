@@ -14,7 +14,7 @@ fn main() {
 
     println!("Pokechain: {:?}", pokechain);
     println!("Length of chain: {:?}", pokechain.len());
-    println!("Duration: {:?}s", duration);
+    println!("Duration: {:?} ms", duration);
 
 }
 
