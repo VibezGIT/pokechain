@@ -9,7 +9,7 @@ struct Node {
 
 
 fn main() {
-    let pokedex_length = 70; //MAX 898
+    let pokedex_length = 30; //MAX 898
 
     let file = fs::read_to_string("./pokedex.json").expect("Unable to read file");
     let pokedex: Vec<String> = serde_json::from_str(&file).expect("JSON was not properly formatted.");  
